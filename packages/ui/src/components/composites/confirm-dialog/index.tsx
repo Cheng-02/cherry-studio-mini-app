@@ -1,0 +1,111 @@
+import * as React from 'react'
+
+import { Button } from '@cherrystudio/ui/components/primitives/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@cherrystudio/ui/components/primitives/dialog'
+
+interface ConfirmDialogProps {
+  /** Controls the open state of the dialog */
+  open?: boolean
+  /** Callback when open state changes */
+  onOpenChange?: (open: boolean) => void
+  /** Dialog title */
+  title: React.ReactNode
+  /** Dialog description */
+  description?: React.ReactNode
+  /** Custom content below description */
+  content?: React.ReactNode
+  /** Confirm button text */
+  confirmText?: string
+  /** Cancel button text */
+  cancelText?: string
+  /** Disabled state for cancel button */
+  cancelDisabled?: boolean
+  /** Return false to keep the dialog open; void or true closes it. */
+  onConfirm?: () => boolean | void | Promise<boolean | void>
+  /** Whether this is a destructive action (e.g., delete) */
+  destructive?: boolean
+  /** Loading state for confirm button */
+  confirmLoading?: boolean
+  /** Disabled state for confirm button */
+  confirmDisabled?: boolean
+  /** Optional className for DialogContent */
+  contentClassName?: string
+  /** Optional className for DialogOverlay */
+  overlayClassName?: string
+}
+
+function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  content,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  cancelDisabled = false,
+  onConfirm,
+  destructive = false,
+  confirmLoading = false,
+  confirmDisabled = false,
+  contentClassName,
+  overlayClassName
+}: ConfirmDialogProps) {
+  const confirming = React.useRef(false)
+  const [isConfirming, setIsConfirming] = React.useState(false)
+  const busy = confirmLoading || isConfirming
+  const handleConfirm = React.useCallback(async () => {
+    if (open === false || confirmLoading || confirming.current) return
+    confirming.current = true
+    setIsConfirming(true)
+    try {
+      const result = await onConfirm?.()
+      if (result !== false) onOpenChange?.(false)
+    } finally {
+      confirming.current = false
+      setIsConfirming(false)
+    }
+  }, [confirmLoading, onConfirm, onOpenChange, open])
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => (next || (!confirmLoading && !confirming.current)) && onOpenChange?.(next)}>
+      <DialogContent
+        guardDismiss={busy}
+        motion="fade-scale"
+        showCloseButton={false}
+        className={contentClassName}
+        overlayClassName={overlayClassName}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          {description && <DialogDescription>{description}</DialogDescription>}
+        </DialogHeader>
+        {content}
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline" disabled={cancelDisabled || busy}>
+              {cancelText}
+            </Button>
+          </DialogClose>
+          <Button
+            variant={destructive ? 'destructive' : 'default'}
+            onClick={handleConfirm}
+            loading={busy}
+            disabled={confirmDisabled || busy}>
+            {confirmText}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export { ConfirmDialog, type ConfirmDialogProps }

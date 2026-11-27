@@ -1,0 +1,117 @@
+import { readFile } from 'node:fs/promises'
+
+import type { formatFromExtension, toMarkdownBytes } from '@firecrawl/anydoc'
+
+import { application } from '@application'
+import { loggerService } from '@logger'
+import {
+  extractPdfTextLayerMarkdown,
+  inspectPdfText,
+  isMalformedPdfError,
+  isScannedPdfError
+} from '@main/utils/pdfText'
+
+import type { FileProcessingCapabilityHandler } from '../../types'
+import { ocrPdfPagesToMarkdown } from '../pdfPageOcr'
+
+const logger = loggerService.withContext('LocalDocumentToMarkdownHandler')
+
+/**
+ * Rendering and recognizing a page costs a second or two, and the background
+ * file-processing job is capped at 15 minutes with no retry. Refusing an
+ * oversized document up front beats spending most of that budget and then
+ * timing out with nothing to show for it.
+ */
+const MAX_PDF_PAGES = 300
+
+type AnydocModule = {
+  formatFromExtension: typeof formatFromExtension
+  toMarkdownBytes: typeof toMarkdownBytes
+}
+
+let anydocModulePromise: Promise<AnydocModule> | undefined
+
+function loadAnydocModule(): Promise<AnydocModule> {
+  return (anydocModulePromise ??= import('@firecrawl/anydoc'))
+}
+
+/**
+ * Fully offline PDF to markdown. anydoc handles PDFs whose every page carries a
+ * text layer; a scan or mixed PDF goes through local PaddleOCR in full so no page
+ * can disappear from the result. `prepare` refuses the whole job unless that
+ * model is ready, even for a text-layer PDF that would never touch it — a scan
+ * must not reach a dead end halfway through.
+ */
+export const localDocumentToMarkdownHandler: FileProcessingCapabilityHandler<'document_to_markdown'> = {
+  mode: 'background',
+  async prepare(file, _config, signal) {
+    signal?.throwIfAborted()
+
+    if (file.ext?.toLowerCase() !== 'pdf') {
+      throw new Error(`Local document processing only supports PDF files, got ${file.ext ?? 'no extension'}`)
+    }
+    if (!application.get('LocalModelService').isDefaultModelReady('ocr')) {
+      throw new Error('Local OCR model is not downloaded')
+    }
+
+    const pdfBytes = await readFile(file.path)
+    signal?.throwIfAborted()
+
+    const { pageCount, hasTextlessPages } = await inspectPdfText(pdfBytes)
+    if (pageCount > MAX_PDF_PAGES) {
+      throw new Error(`PDF has ${pageCount} pages, which exceeds the ${MAX_PDF_PAGES}-page local processing limit`)
+    }
+
+    return {
+      mode: 'background',
+      async execute(executionContext) {
+        if (!hasTextlessPages) {
+          let anydocMarkdown: string | null
+          try {
+            anydocMarkdown = await convertWithAnydoc(pdfBytes)
+          } catch (error) {
+            if (isMalformedPdfError(error)) {
+              const reason = error instanceof Error ? error.message : String(error)
+              logger.warn(`anydoc rejected PDF as malformed (${reason}); falling back to pdfjs text layer`, {
+                pageCount
+              })
+              const markdownContent = await extractPdfTextLayerMarkdown(pdfBytes)
+              executionContext.reportProgress(100)
+              return { kind: 'markdown', markdownContent }
+            }
+            throw error
+          }
+
+          if (anydocMarkdown !== null) {
+            executionContext.reportProgress(100)
+            return { kind: 'markdown', markdownContent: anydocMarkdown }
+          }
+        }
+
+        logger.info('PDF requires OCR fallback; using local OCR for the complete document', {
+          pageCount
+        })
+        return {
+          kind: 'markdown',
+          markdownContent: await ocrPdfPagesToMarkdown(pdfBytes, pageCount, executionContext)
+        }
+      }
+    }
+  }
+}
+
+/** Markdown from the PDF's text layer, or `null` when it has none and OCR must take over. */
+async function convertWithAnydoc(pdfBytes: Uint8Array): Promise<string | null> {
+  const anydoc = await loadAnydocModule()
+
+  try {
+    return (await anydoc.toMarkdownBytes(pdfBytes, anydoc.formatFromExtension('pdf') ?? undefined)).trim()
+  } catch (error) {
+    if (isScannedPdfError(error)) {
+      return null
+    }
+    // Non-OCR errors (encrypted, io, etc.) cannot be rescued by OCR; malformed
+    // is also rethrown here so execute() can fall back to the verified text layer.
+    throw error
+  }
+}

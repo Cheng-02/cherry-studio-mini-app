@@ -1,0 +1,128 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { makeModel } from '@main/ai/__tests__/fixtures/model'
+import { makeProvider } from '@main/ai/__tests__/fixtures/provider'
+import { ENDPOINT_TYPE, MODEL_CAPABILITY } from '@shared/data/types/model'
+
+import type { InputParamsMap } from '../../adapters'
+
+type GeminiGenerateContentRequest = InputParamsMap['gemini']
+
+const mocks = vi.hoisted(() => ({ resolveGatewayModelAddress: vi.fn() }))
+
+vi.mock('../../utils/models', () => ({ resolveGatewayModelAddress: mocks.resolveGatewayModelAddress }))
+vi.mock('@logger', () => ({
+  loggerService: { withContext: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }) }
+}))
+
+import { estimateGeminiRequestTokens } from '../estimateGeminiRequestTokens'
+
+// openai-dialect provider → skips the google remote path, exercising the local walker.
+const openaiProvider = () =>
+  makeProvider({
+    defaultChatEndpoint: ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS,
+    endpointConfigs: { [ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS]: { adapterFamily: 'openai-compatible' } }
+  })
+
+const resolveTo = (model: ReturnType<typeof makeModel>) =>
+  mocks.resolveGatewayModelAddress.mockReturnValue({
+    providerId: 'p',
+    apiModelId: 'm',
+    uniqueModelId: 'p::m',
+    provider: openaiProvider(),
+    model
+  })
+
+const body = (contents: unknown, tools?: unknown) => ({ contents, tools }) as unknown as GeminiGenerateContentRequest
+
+beforeEach(() => vi.clearAllMocks())
+
+describe('estimateGeminiRequestTokens', () => {
+  it('counts a text request', async () => {
+    resolveTo(makeModel({ capabilities: [] }))
+    expect(
+      await estimateGeminiRequestTokens(body([{ role: 'user', parts: [{ text: 'hello world' }] }]), 'p:m')
+    ).toBeGreaterThan(0)
+  })
+
+  it('estimates the original signed part when the Gemini adapter sends it instead of a placeholder', async () => {
+    const model = makeModel({ capabilities: [] })
+    const nativeProvider = makeProvider({
+      defaultChatEndpoint: ENDPOINT_TYPE.GOOGLE_GENERATE_CONTENT,
+      endpointConfigs: { [ENDPOINT_TYPE.GOOGLE_GENERATE_CONTENT]: { adapterFamily: 'google' } }
+    })
+    const request = (part: { text: string; thoughtSignature?: string }) =>
+      body([
+        { role: 'user', parts: [{ text: 'Hi' }] },
+        { role: 'model', parts: [part] }
+      ])
+    const whitespace = { text: '\n \t', thoughtSignature: 'fixture-signature' }
+    const placeholder = { text: '...' }
+
+    mocks.resolveGatewayModelAddress.mockReturnValue({ provider: nativeProvider, model })
+    expect(await estimateGeminiRequestTokens(request(whitespace), 'p:m')).toBeLessThan(
+      await estimateGeminiRequestTokens(request(placeholder), 'p:m')
+    )
+
+    resolveTo(model)
+    expect(await estimateGeminiRequestTokens(request(whitespace), 'p:m')).toBe(
+      await estimateGeminiRequestTokens(request(placeholder), 'p:m')
+    )
+  })
+
+  it('counts inlineData media (no longer rejected)', async () => {
+    resolveTo(makeModel({ capabilities: [MODEL_CAPABILITY.IMAGE_RECOGNITION] }))
+    const n = await estimateGeminiRequestTokens(
+      body([{ role: 'user', parts: [{ inlineData: { mimeType: 'image/png', data: 'AAAA' } }] }]),
+      'p:m'
+    )
+    expect(n).toBeGreaterThan(0)
+  })
+
+  it('adds function-declaration tool tokens', async () => {
+    resolveTo(makeModel({ capabilities: [] }))
+    const contents = [{ role: 'user', parts: [{ text: 'hi' }] }]
+    const tools = [
+      {
+        functionDeclarations: [
+          {
+            name: 'search',
+            description: 'd',
+            parameters: { type: 'object', properties: { q: { type: 'string', description: 'x'.repeat(400) } } }
+          }
+        ]
+      }
+    ]
+    const withTools = await estimateGeminiRequestTokens(body(contents, tools), 'p:m')
+    const without = await estimateGeminiRequestTokens(body(contents), 'p:m')
+    expect(withTools).toBeGreaterThan(without + 50)
+  })
+
+  it('counts the converted ToolSet, not raw declarations: a name-less huge declaration is dropped', async () => {
+    resolveTo(makeModel({ capabilities: [] }))
+    const contents = [{ role: 'user', parts: [{ text: 'hi' }] }]
+    // No `name` → the converter discards it, so it never reaches the provider and must not
+    // dominate totalTokens despite the huge description.
+    const junkTools = [{ functionDeclarations: [{ description: 'x'.repeat(50_000), parameters: { type: 'object' } }] }]
+    const withJunk = await estimateGeminiRequestTokens(body(contents, junkTools), 'p:m')
+    const without = await estimateGeminiRequestTokens(body(contents), 'p:m')
+    expect(withJunk).toBeLessThan(without + 100)
+  })
+
+  it('degrades to a finite count on resolve failure', async () => {
+    mocks.resolveGatewayModelAddress.mockImplementation(() => {
+      throw new Error('unknown model')
+    })
+    const n = await estimateGeminiRequestTokens(body([{ role: 'user', parts: [{ text: 'hello' }] }]), 'p:m')
+    expect(Number.isFinite(n)).toBe(true)
+    expect(n).toBeGreaterThan(0)
+  })
+
+  it('degrades to a raw-size heuristic (no 500) on malformed parts', async () => {
+    resolveTo(makeModel({ capabilities: [] }))
+    // contents entries are loose objects — a null part throws in the converter, the wrapper catches.
+    const n = await estimateGeminiRequestTokens(body([{ role: 'user', parts: [null] }]), 'p:m')
+    expect(Number.isFinite(n)).toBe(true)
+    expect(n).toBeGreaterThan(0)
+  })
+})

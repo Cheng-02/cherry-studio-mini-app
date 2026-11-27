@@ -1,0 +1,103 @@
+import type { IpcRequestSchemas } from '@shared/ipc/schemas/ipcSchemas'
+import type { IpcHandlersFor } from '@shared/ipc/types'
+
+import { agentHandlers } from './agent'
+import { aiHandlers } from './ai'
+import { apiGatewayHandlers } from './apiGateway'
+import { appHandlers } from './app'
+import { assistantHandlers } from './assistant'
+import { backupHandlers } from './backup'
+import { binaryHandlers } from './binary'
+import { browserHandlers } from './browser'
+import { channelHandlers } from './channel'
+import { cherryCloudHandlers } from './cherryCloud'
+import { cherryinHandlers } from './cherryin'
+import { citationHandlers } from './citation'
+import { codeCliHandlers } from './codeCli'
+import { computerUseHandlers } from './computerUse'
+import { diagnosticsHandlers } from './diagnostics'
+import { doctorHandlers } from './doctor'
+import { doctorAgentHandlers } from './doctorAgent'
+import { exportHandlers } from './export'
+import { externalAppHandlers } from './externalApp'
+import { fileHandlers } from './file'
+import { fileObservationHandlers } from './fileObservation'
+import { fileProcessingHandlers } from './fileProcessing'
+import { knowledgeHandlers } from './knowledge'
+import { localModelHandlers } from './localModel'
+import { mcpHandlers } from './mcp'
+import { miniAppHandlers } from './miniApp'
+import { navigationHandlers } from './navigation'
+import { notificationHandlers } from './notification'
+import { oauthHandlers } from './oauth'
+import { ovmsHandlers } from './ovms'
+import { pdfjsHandlers } from './pdfjs'
+import { printHandlers } from './print'
+import { profileHandlers } from './profile'
+import { providerHandlers } from './provider'
+import { proxyHandlers } from './proxy'
+import { skillHandlers } from './skill'
+import { systemHandlers } from './system'
+import { tabHandlers } from './tab'
+import { toolResultHandlers } from './toolResult'
+import { translateHandlers } from './translate'
+import { trashHandlers } from './trash'
+import { webSearchHandlers } from './webSearch'
+import { webviewHandlers } from './webview'
+import { windowHandlers } from './window'
+
+/**
+ * Global request handler map — exactly one handler per declared route, exhaustive
+ * and closed (enforced by the `IpcHandlersFor<IpcRequestSchemas>` annotation:
+ * miss a route → compile error; add an undeclared one → compile error).
+ *
+ * Each migrated domain spreads its own `*Handlers` object here. This is the single
+ * place that enumerates every main capability the renderer can reach — the audited
+ * exposure surface.
+ */
+export const ipcHandlers: IpcHandlersFor<IpcRequestSchemas> = {
+  ...aiHandlers,
+  ...agentHandlers,
+  ...apiGatewayHandlers,
+  ...appHandlers,
+  ...backupHandlers,
+  ...binaryHandlers,
+  ...browserHandlers,
+  ...channelHandlers,
+  ...cherryinHandlers,
+  ...cherryCloudHandlers,
+  ...citationHandlers,
+  ...codeCliHandlers,
+  ...computerUseHandlers,
+  ...diagnosticsHandlers,
+  ...doctorHandlers,
+  ...doctorAgentHandlers,
+  ...exportHandlers,
+  ...externalAppHandlers,
+  ...fileHandlers,
+  ...fileObservationHandlers,
+  ...fileProcessingHandlers,
+  ...knowledgeHandlers,
+  ...localModelHandlers,
+  ...mcpHandlers,
+  ...miniAppHandlers,
+  ...navigationHandlers,
+  ...notificationHandlers,
+  ...oauthHandlers,
+  ...ovmsHandlers,
+  ...pdfjsHandlers,
+  ...printHandlers,
+  ...assistantHandlers,
+  ...profileHandlers,
+  ...proxyHandlers,
+  ...providerHandlers,
+  ...skillHandlers,
+  ...systemHandlers,
+  ...tabHandlers,
+  ...translateHandlers,
+  ...toolResultHandlers,
+  ...trashHandlers,
+  ...webSearchHandlers,
+  ...webviewHandlers,
+  ...windowHandlers
+}
