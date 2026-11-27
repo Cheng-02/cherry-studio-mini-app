@@ -30,6 +30,18 @@ files:
   - "!**/node_modules/@napi-rs/*-win32-arm64*/**"
   - "!**/node_modules/@img/sharp-win32-arm64/**"
   - "!**/node_modules/better-sqlite3/prebuilds/!(win32-x64.node)"
+  # Mini-app-only fork: heavy optional runtimes for removed features. All of
+  # them are loaded through dynamic import() only when their feature is used.
+  - "!**/node_modules/onnxruntime-node/**"
+  - "!**/node_modules/onnxruntime-web/**"
+  - "!**/node_modules/pdfjs-dist/**"
+  - "!**/node_modules/@napi-rs/**"
+  - "!**/node_modules/@img/**"
+  - "!**/node_modules/@firecrawl/**"
+  - "!**/node_modules/selection-hook/**"
+  - "!**/node_modules/node-screenshots-*/**"
+  - "!**/node_modules/tesseract.js*/**"
+  - "!**/node_modules/@silvia-odwyer/**"
   - "!**/{.vscode,.yarn,.yarn-lock,.github,.cursorrules,.prettierrc}"
   - "!electron.vite.config.{js,ts,mjs,cjs}}"
   - "!electron-builder.*.config.cjs"
