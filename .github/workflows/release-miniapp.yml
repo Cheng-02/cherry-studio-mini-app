@@ -34,10 +34,10 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        # electron-builder's node-module walker chokes on pnpm's symlinked
-        # .pnpm layout on the runner; a hoisted tree avoids that class of
-        # dangling-link failures.
-        run: pnpm install --frozen-lockfile --config.node-linker=hoisted
+        run: pnpm install --frozen-lockfile
+
+      - name: Repair peer links for electron-builder
+        run: node scripts/packaging/ci-link-peers.cjs
 
       - name: Install Electron binary
         run: node node_modules/electron/install.js
