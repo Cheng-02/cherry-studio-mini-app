@@ -104,7 +104,6 @@ const GeneralSettings: FC = () => {
   const { enabled: tray, onClose: trayOnClose, onLaunch: launchToTray } = trayPreferences
   const [preventSleepWhenBusy, setPreventSleepWhenBusy] = usePreference('app.power.prevent_sleep_when_busy')
   const [allowPrivateNetworkFetch, setAllowPrivateNetworkFetch] = usePreference('app.fetch.allow_private_network')
-  const [commitAttribution, setCommitAttribution] = usePreference('agent.commit_attribution.enabled')
   const [storeProxyMode, setProxyMode] = usePreference('app.proxy.mode')
   const [storeProxyBypassRules, _setProxyBypassRules] = usePreference('app.proxy.bypass_rules')
   const [storeProxyUrl, _setProxyUrl] = usePreference('app.proxy.url')
@@ -611,24 +610,6 @@ const GeneralSettings: FC = () => {
             </SettingRow>
           </>
         )}
-      </SettingGroup>
-      <SettingGroup theme={theme}>
-        <SettingTitle>{t('settings.general.sections.agent')}</SettingTitle>
-        <SettingDivider />
-        <SettingDivider />
-        <SettingRow id="setting-general-commit-attribution" className="scroll-mt-6 flex-nowrap">
-          <div className="min-w-0 flex-1">
-            <SettingRowTitle className="flex items-center gap-1.5">
-              <span id="commit-attribution-title">{t('settings.general.commit_attribution.title')}</span>
-              <HelpTooltip content={t('settings.general.commit_attribution.description')} />
-            </SettingRowTitle>
-          </div>
-          <Switch
-            checked={commitAttribution}
-            onCheckedChange={(checked) => void setCommitAttribution(checked)}
-            aria-labelledby="commit-attribution-title"
-          />
-        </SettingRow>
       </SettingGroup>
       <SettingGroup theme={theme}>
         <SettingTitle>{t('settings.general.sections.developer')}</SettingTitle>

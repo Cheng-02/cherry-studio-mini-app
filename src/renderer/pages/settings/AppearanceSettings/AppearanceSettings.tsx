@@ -8,14 +8,10 @@ import {
   Button,
   Combobox,
   type ComboboxOption,
-  Flex,
-  InfoTooltip,
-  InputNumber,
-  SegmentedControl,
   Switch,
   Tooltip
 } from '@cherrystudio/ui'
-import { useMultiplePreferences, usePreference } from '@data/hooks/usePreference'
+import { usePreference } from '@data/hooks/usePreference'
 import { loggerService } from '@logger'
 import ResetIcon from '@renderer/components/icons/ResetIcon'
 import { LazyCodeEditor } from '@renderer/components/LazyCodeEditor'
@@ -37,7 +33,6 @@ import { toast } from '@renderer/services/toast'
 import { formatErrorMessage } from '@renderer/utils/error'
 import { isLinux, isMac } from '@renderer/utils/platform'
 import { cn } from '@renderer/utils/style'
-import type { MenuPresentationMode, TopicTabPosition } from '@shared/data/preference/preferenceTypes'
 import { ThemeMode } from '@shared/data/preference/preferenceTypes'
 import { hasV1CustomCssMarker } from '@shared/utils/customCssMigration'
 
@@ -53,15 +48,6 @@ const THEME_COLOR_PRESETS = [
   '#8B5CF6' // Purple
 ]
 
-type TFunction = (key: string) => string
-type MenuPresentationModeChangeOptions = {
-  currentMode: MenuPresentationMode
-  mode: MenuPresentationMode
-  setMenuPresentationMode: (mode: MenuPresentationMode) => Promise<unknown> | unknown
-  setTimeoutTimer: (key: string, callback: () => void, delay: number) => void
-  t: TFunction
-}
-
 type ThemePreviewOption = {
   icon: typeof Sun
   label: string
@@ -72,40 +58,6 @@ const defaultFontPreviewFamily = 'Ubuntu, -apple-system, system-ui, Arial, sans-
 const fontComboboxClassName = 'h-8 rounded-md border-border bg-transparent pl-3 pr-8 text-sm dark:bg-input/30'
 const logger = loggerService.withContext('AppearanceSettings')
 
-export async function confirmMenuPresentationModeChange({
-  currentMode,
-  mode,
-  setMenuPresentationMode,
-  setTimeoutTimer,
-  t
-}: MenuPresentationModeChangeOptions): Promise<void> {
-  if (mode === currentMode) return
-
-  const confirmed = await popup.confirm({
-    title: t('settings.general.common.menu.presentation_mode.restart.title'),
-    content: t('settings.general.common.menu.presentation_mode.restart.content'),
-    okText: t('common.confirm'),
-    cancelText: t('common.cancel'),
-    centered: true
-  })
-  if (!confirmed) return
-
-  try {
-    await setMenuPresentationMode(mode)
-  } catch (error) {
-    toast.error(formatErrorMessage(error))
-    throw error
-  }
-
-  setTimeoutTimer(
-    'handleMenuPresentationModeChange',
-    () => {
-      void ipcApi.request('app.relaunch')
-    },
-    500
-  )
-}
-
 const AppearanceSettings: FC = () => {
   const { t } = useTranslation()
   const { theme, settedTheme, setTheme } = useTheme()
@@ -113,17 +65,9 @@ const AppearanceSettings: FC = () => {
   const { userTheme, setUserTheme } = useUserTheme()
 
   const [windowStyle, setWindowStyle] = usePreference('ui.window_style')
-  const [menuPresentationMode, setMenuPresentationMode] = usePreference('menu.presentation_mode')
   const [customCss, setCustomCss] = usePreference('ui.custom_css')
   const [fontSize] = usePreference('chat.message.font_size')
   const [useSystemTitleBar, setUseSystemTitleBar] = usePreference('app.use_system_title_bar')
-  const [topicListPosition, setTopicListPosition] = usePreference('topic.tab.position')
-  const [sessionListPosition, setSessionListPosition] = usePreference('agent.session.position')
-  const [codeExecution, setCodeExecution] = useMultiplePreferences({
-    enabled: 'chat.code.execution.enabled',
-    timeoutMinutes: 'chat.code.execution.timeout_minutes'
-  })
-  const [codeImageTools, setCodeImageTools] = usePreference('chat.code.image_tools')
 
   const [currentZoom, setCurrentZoom] = useState(1.0)
   const [fontList, setFontList] = useState<string[]>([])
@@ -173,35 +117,6 @@ const AppearanceSettings: FC = () => {
       void setWindowStyle(checked ? 'transparent' : 'opaque')
     },
     [setWindowStyle]
-  )
-
-  const menuPresentationModeOptions = useMemo(
-    () => [
-      { value: 'cherry' as const, label: t('settings.general.common.menu.presentation_mode.cherry') },
-      { value: 'native' as const, label: t('settings.general.common.menu.presentation_mode.native') }
-    ],
-    [t]
-  )
-
-  const listPositionOptions = useMemo(
-    () => [
-      { value: 'left' as const, label: t('settings.topic.position.left') },
-      { value: 'right' as const, label: t('settings.topic.position.right') }
-    ],
-    [t]
-  )
-
-  const handleMenuPresentationModeChange = useCallback(
-    (mode: MenuPresentationMode) => {
-      void confirmMenuPresentationModeChange({
-        currentMode: menuPresentationMode,
-        mode,
-        setMenuPresentationMode,
-        setTimeoutTimer,
-        t
-      })
-    },
-    [menuPresentationMode, setMenuPresentationMode, setTimeoutTimer, t]
   )
 
   const handleUseSystemTitleBarChange = async (checked: boolean) => {
@@ -255,16 +170,6 @@ const AppearanceSettings: FC = () => {
     [setUserTheme, userTheme]
   )
 
-  const handleUserCodeFontChange = useCallback(
-    (value: string) => {
-      setUserTheme({
-        ...userTheme,
-        userCodeFontFamily: value
-      })
-    },
-    [setUserTheme, userTheme]
-  )
-
   const fontOptions = useMemo<ComboboxOption[]>(
     () => [
       {
@@ -297,13 +202,6 @@ const AppearanceSettings: FC = () => {
       handleFontComboboxChange(value, handleUserFontChange)
     },
     [handleFontComboboxChange, handleUserFontChange]
-  )
-
-  const handleUserCodeFontComboboxChange = useCallback(
-    (value: string | string[]) => {
-      handleFontComboboxChange(value, handleUserCodeFontChange)
-    },
-    [handleFontComboboxChange, handleUserCodeFontChange]
   )
 
   return (
@@ -388,38 +286,7 @@ const AppearanceSettings: FC = () => {
             </SettingRow>
           </>
         )}
-        <SettingDivider />
-        <SettingRow id="setting-appearance-menu-presentation-mode" className="scroll-mt-6">
-          <SettingRowTitle>{t('settings.general.common.menu.presentation_mode.title')}</SettingRowTitle>
-          <SegmentedControl<MenuPresentationMode>
-            value={menuPresentationMode}
-            onValueChange={handleMenuPresentationModeChange}
-            options={menuPresentationModeOptions}
-            size="sm"
-          />
-        </SettingRow>
-        <SettingDivider />
-        <SettingRow id="setting-appearance-chat-list-position" className="scroll-mt-6">
-          <SettingRowTitle>{t('settings.display.list_position.chat')}</SettingRowTitle>
-          <SegmentedControl<TopicTabPosition>
-            value={topicListPosition}
-            onValueChange={setTopicListPosition}
-            options={listPositionOptions}
-            aria-label={t('settings.display.list_position.chat')}
-            size="sm"
-          />
-        </SettingRow>
-        <SettingDivider />
-        <SettingRow id="setting-appearance-work-list-position" className="scroll-mt-6">
-          <SettingRowTitle>{t('settings.display.list_position.work')}</SettingRowTitle>
-          <SegmentedControl<TopicTabPosition>
-            value={sessionListPosition}
-            onValueChange={setSessionListPosition}
-            options={listPositionOptions}
-            aria-label={t('settings.display.list_position.work')}
-            size="sm"
-          />
-        </SettingRow>
+
       </SettingGroup>
 
       <SettingGroup theme={theme}>
@@ -453,81 +320,9 @@ const AppearanceSettings: FC = () => {
             </div>
           </SelectorRow>
         </SettingRow>
-        <SettingDivider />
-        <SettingRow id="setting-appearance-font-code" className="scroll-mt-6">
-          <SettingRowTitle>{t('settings.display.font.code')}</SettingRowTitle>
-          <SelectorRow className="gap-2">
-            {userTheme.userCodeFontFamily && (
-              <Button
-                onClick={() => handleUserCodeFontChange('')}
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground">
-                <ResetIcon size="14" />
-              </Button>
-            )}
-            <div className="min-w-0 flex-1">
-              <Combobox
-                placeholder={t('settings.display.font.select')}
-                emptyText={t('common.no_results')}
-                options={fontOptions}
-                value={userTheme.userCodeFontFamily || ''}
-                onChange={handleUserCodeFontComboboxChange}
-                renderOption={renderFontOption}
-                searchPlacement="trigger"
-                className={fontComboboxClassName}
-                triggerStyle={{ fontFamily: userTheme.userCodeFontFamily || defaultFontPreviewFamily }}
-                popoverClassName="max-h-[320px] w-(--radix-popover-trigger-width) overflow-y-auto"
-              />
-            </div>
-          </SelectorRow>
-        </SettingRow>
+
       </SettingGroup>
 
-
-      <SettingGroup theme={theme}>
-        <SettingTitle>{t('chat.settings.code_execution.title')}</SettingTitle>
-        <SettingDivider />
-        <SettingRow id="setting-appearance-code-execution-enabled" className="scroll-mt-6">
-          <Flex className="items-center gap-1">
-            <SettingRowTitle>{t('chat.settings.code_execution.title')}</SettingRowTitle>
-            <InfoTooltip content={t('chat.settings.code_execution.tip')} />
-          </Flex>
-          <Switch
-            checked={codeExecution.enabled}
-            onCheckedChange={(checked) => setCodeExecution({ enabled: checked })}
-          />
-        </SettingRow>
-        {codeExecution.enabled && (
-          <>
-            <SettingDivider />
-            <SettingRow>
-              <Flex className="items-center gap-1">
-                <SettingRowTitle>{t('chat.settings.code_execution.timeout_minutes.label')}</SettingRowTitle>
-                <InfoTooltip content={t('chat.settings.code_execution.timeout_minutes.tip')} />
-              </Flex>
-              <InputNumber
-                size="small"
-                aria-label={t('chat.settings.code_execution.timeout_minutes.label')}
-                className="w-20 text-sm"
-                min={1}
-                max={60}
-                step={1}
-                value={codeExecution.timeoutMinutes}
-                onBlur={(value) => setCodeExecution({ timeoutMinutes: value ?? 1 })}
-              />
-            </SettingRow>
-          </>
-        )}
-        <SettingDivider />
-        <SettingRow id="setting-appearance-code-image-tools" className="scroll-mt-6">
-          <Flex className="items-center gap-1">
-            <SettingRowTitle>{t('chat.settings.code_image_tools.label')}</SettingRowTitle>
-            <InfoTooltip content={t('chat.settings.code_image_tools.tip')} />
-          </Flex>
-          <Switch checked={codeImageTools} onCheckedChange={setCodeImageTools} />
-        </SettingRow>
-      </SettingGroup>
 
       <SettingGroup theme={theme}>
         <SettingTitle>{t('settings.display.custom.css.label')}</SettingTitle>

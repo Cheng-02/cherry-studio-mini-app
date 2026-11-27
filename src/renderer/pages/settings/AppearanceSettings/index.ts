@@ -1,1 +1,1 @@
-export { default as AppearanceSettings, confirmMenuPresentationModeChange } from './AppearanceSettings'
+export { default as AppearanceSettings } from './AppearanceSettings'
