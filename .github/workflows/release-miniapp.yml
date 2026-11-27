@@ -58,7 +58,7 @@ jobs:
         run: |
           mkdir -p release-assets
           shopt -s nullglob
-          cp dist/*.exe dist/*.yml dist/*.blockmap release-assets/ 2>/dev/null || true
+          cp dist/*.exe dist/latest*.yml dist/*.blockmap release-assets/ 2>/dev/null || true
           ls -la release-assets
 
       - name: Upload workflow artifacts
