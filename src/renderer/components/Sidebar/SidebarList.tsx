@@ -86,7 +86,7 @@ function IconList({ entries, onReorder, onContextMenuOpenChange }: ListProps) {
       items={entries}
       itemKey="key"
       onReorder={onReorder}
-      className="flex flex-col items-center gap-1 px-1.5 [-webkit-app-region:no-drag]">
+      className="flex flex-col items-center gap-1 px-1.5 pt-1.5 [-webkit-app-region:no-drag]">
       {(entry, guardClick) => {
         const isActive = !entry.disabled && entry.isActive
 

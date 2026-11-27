@@ -109,15 +109,9 @@ export default function LaunchpadPage() {
       <ScrollArea className="min-h-0 flex-1">
         <div className="mx-auto flex w-full max-w-180 flex-col gap-5 py-12.5">
           <section className="flex flex-col gap-2">
-            <div className="flex items-center justify-between px-9">
-              <h2 className="m-0 py-0 font-semibold text-[14px] text-foreground opacity-80">
-                {t('launchpad.miniApps')}
-              </h2>
-              <Button type="button" variant="ghost" size="sm" onClick={openCatalog}>
-                <Plus size={14} />
-                {t('launchpad.add')}
-              </Button>
-            </div>
+            <h2 className="m-0 px-9 py-0 font-semibold text-[14px] text-foreground opacity-80">
+              {t('launchpad.miniApps')}
+            </h2>
 
             {orderedMiniApps.length > 0 ? (
               <div className={LAUNCHPAD_GRID_CLASS}>
