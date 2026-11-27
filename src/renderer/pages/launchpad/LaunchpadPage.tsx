@@ -142,11 +142,14 @@ export default function LaunchpadPage() {
                     </div>
                   )}
                 />
-                <button type="button" onClick={openCatalog} className={`${LAUNCHPAD_ITEM_CLASS} group`}>
+                <button
+                  type="button"
+                  onClick={openCatalog}
+                  className={`${LAUNCHPAD_ITEM_CLASS} group flex flex-col items-center`}>
                   <span className={ADD_TILE_CLASS}>
                     <Plus size={20} />
                   </span>
-                  <span className="mt-2 block w-full overflow-hidden text-ellipsis whitespace-nowrap text-[12px] text-muted-foreground group-hover:text-foreground">
+                  <span className="mt-2 block w-full overflow-hidden text-center text-ellipsis whitespace-nowrap text-[12px] text-muted-foreground group-hover:text-foreground">
                     {t('launchpad.add')}
                   </span>
                 </button>
