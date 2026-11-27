@@ -7,6 +7,7 @@ const pathnameOf = (url: string) => parseAppRouteUrl(url)?.pathname ?? ''
  * Route to i18n key mapping for default tab titles
  */
 const routeTitleKeys: Record<string, string> = {
+  '/app/launchpad': 'title.launchpad',
   '/app/mini-app': 'launchpad.miniApps',
   '/settings': 'title.settings'
 }

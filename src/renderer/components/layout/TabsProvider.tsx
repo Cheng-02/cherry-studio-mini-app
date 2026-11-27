@@ -20,7 +20,7 @@ const logger = loggerService.withContext('TabsProvider')
 const DEFAULT_TAB: Tab = {
   id: 'home',
   type: 'route',
-  url: '/app/mini-app',
+  url: '/app/launchpad',
   title: '',
   lastAccessTime: Date.now(),
   isDormant: false
@@ -30,8 +30,8 @@ function createLaunchpadFallbackTab(): Tab {
   return {
     id: uuid(),
     type: 'route',
-    url: '/app/mini-app',
-    title: getDefaultRouteTitle('/app/mini-app'),
+    url: '/app/launchpad',
+    title: getDefaultRouteTitle('/app/launchpad'),
     lastAccessTime: Date.now(),
     isDormant: false
   }
@@ -47,7 +47,7 @@ function hibernateTab(tab: Tab, hibernatedIds: ReadonlySet<string>): Tab {
 // Mini-app-only build: the router only serves these route prefixes. Persisted
 // tabs/pins pointing at removed feature routes are dropped on restore instead of
 // restoring into a route-not-found page.
-const SERVED_ROUTE_PREFIXES = ['/app/mini-app', '/settings']
+const SERVED_ROUTE_PREFIXES = ['/app/launchpad', '/app/mini-app', '/settings']
 
 function routePathOfTab(tab: Tab): string | null {
   if (tab.type !== 'route') return null

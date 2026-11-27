@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from 'react'
 
-import { usePreference } from '@data/hooks/usePreference'
 import { loggerService } from '@logger'
 import {
   CORE_SIDEBAR_SHORTCUT_PROVIDERS,
@@ -19,7 +18,6 @@ import { WindowFatalFallback } from '@renderer/components/WindowFatalFallback'
 import { useMainWindowNavigation } from '@renderer/hooks/tab'
 import { useIsPrivacyUpdateRequired } from '@renderer/hooks/useIsPrivacyUpdateRequired'
 import { useWindowRuntime } from '@renderer/hooks/useWindowRuntime'
-import { getSidebarDefaultLandingUrl } from '@renderer/utils/sidebar'
 import type { Tab } from '@shared/data/cache/cacheValueTypes'
 
 import { useAppUpdateHandler } from './hooks/useAppUpdateHandler'
@@ -50,8 +48,6 @@ function MainWindowRuntime(): null {
 }
 
 export function MainWindowContent(): React.ReactElement {
-  const [sidebarShortcuts] = usePreference('ui.sidebar_shortcut')
-  const [defaultPaintingProvider] = usePreference('feature.paintings.default_provider')
   const sidebarShortcutRegistry = useMemo(() => new SidebarShortcutRegistry(CORE_SIDEBAR_SHORTCUT_PROVIDERS), [])
   const privacyUpdateRequired = useIsPrivacyUpdateRequired()
 
@@ -59,12 +55,12 @@ export function MainWindowContent(): React.ReactElement {
     () => ({
       id: 'home',
       type: 'route',
-      url: getSidebarDefaultLandingUrl(sidebarShortcuts, defaultPaintingProvider) || '/app/mini-app',
+      url: '/app/launchpad',
       title: '',
       lastAccessTime: Date.now(),
       isDormant: false
     }),
-    [defaultPaintingProvider, sidebarShortcuts]
+    []
   )
 
   return (

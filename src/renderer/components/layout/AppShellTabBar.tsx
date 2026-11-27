@@ -831,8 +831,8 @@ export const AppShellTabBar = ({
 
   // ─── Action handlers ────────────────────────────────────────────────────────
 
-  const handleOpenMiniApps = () => {
-    openTab('/app/mini-app', { title: t('launchpad.miniApps'), forceNew: true, position: 'end' })
+  const handleOpenLaunchpad = () => {
+    openTab('/app/launchpad', { title: t('title.launchpad'), forceNew: true, position: 'end' })
   }
 
   // ─── Close-in-place freeze/thaw ─────────────────────────────────────────────
@@ -1178,15 +1178,15 @@ export const AppShellTabBar = ({
             )
           })}
 
-          {/* New mini-app tab button — sticky so it hugs the last tab but never scrolls away */}
+          {/* Launchpad button — sticky so it hugs the last tab but never scrolls away */}
           {!isFocusedTab && (
-            <Tooltip placement="bottom" content={t('launchpad.miniApps')} delay={800}>
+            <Tooltip placement="bottom" content={t('title.launchpad')} delay={800}>
               <button
                 ref={rightInsetRef}
                 type="button"
                 data-launchpad-button
-                aria-label={t('launchpad.miniApps')}
-                onClick={handleOpenMiniApps}
+                aria-label={t('title.launchpad')}
+                onClick={handleOpenLaunchpad}
                 className={cn(
                   'sticky right-0 ml-0.5 flex h-7 w-7 shrink-0 appearance-none items-center justify-center rounded-[10px] border-0 bg-transparent p-0 text-muted-foreground shadow-none transition-colors [-webkit-app-region:no-drag] hover:text-sidebar-foreground',
                   isMacTransparentWindow ? 'hover:bg-white/50 dark:hover:bg-white/8' : 'hover:bg-sidebar-accent'

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as AppLaunchpadRouteImport } from './routes/app/launchpad'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as SettingsAboutRouteImport } from './routes/settings/about'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
@@ -32,6 +33,11 @@ const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppLaunchpadRoute = AppLaunchpadRouteImport.update({
+  id: '/launchpad',
+  path: '/launchpad',
+  getParentRoute: () => AppRoute,
 } as any)
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/',
@@ -92,6 +98,7 @@ const AppMiniAppAppIdRoute = AppMiniAppAppIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/settings': typeof SettingsRouteWithChildren
+  '/app/launchpad': typeof AppLaunchpadRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/data': typeof SettingsDataRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/app': typeof AppRouteWithChildren
+  '/app/launchpad': typeof AppLaunchpadRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/data': typeof SettingsDataRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/app': typeof AppRouteWithChildren
   '/settings': typeof SettingsRouteWithChildren
+  '/app/launchpad': typeof AppLaunchpadRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/data': typeof SettingsDataRoute
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/app'
     | '/settings'
+    | '/app/launchpad'
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/data'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/app'
+    | '/app/launchpad'
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/data'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/app'
     | '/settings'
+    | '/app/launchpad'
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/data'
@@ -201,6 +213,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/app/launchpad': {
+      id: '/app/launchpad'
+      path: '/launchpad'
+      fullPath: '/app/launchpad'
+      preLoaderRoute: typeof AppLaunchpadRouteImport
+      parentRoute: typeof AppRoute
     }
     '/settings/': {
       id: '/settings/'
@@ -283,11 +302,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppLaunchpadRoute: typeof AppLaunchpadRoute
   AppMiniAppAppIdRoute: typeof AppMiniAppAppIdRoute
   AppMiniAppIndexRoute: typeof AppMiniAppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppLaunchpadRoute: AppLaunchpadRoute,
   AppMiniAppAppIdRoute: AppMiniAppAppIdRoute,
   AppMiniAppIndexRoute: AppMiniAppIndexRoute,
 }
