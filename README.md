@@ -57,11 +57,27 @@ npx electron-vite build
 pnpm run build:utility-process
 ```
 
-启动开发模式：
+启动开发模式（已在 Windows + Node 24 + pnpm 12 上验证）：
 
 ```bash
-pnpm dev
+# 1. 依赖装完后先确认 electron 二进制存在（pnpm 12 默认不跑依赖的 postinstall）
+node node_modules/electron/install.js
+
+# 2. 如果上一步下载/解压异常，可手工补齐：
+#    解压 electron-v<version>-<platform>-<arch>.zip 到 node_modules/electron/dist，
+#    再写入 electron 可执行文件名（Windows 为 electron.exe）
+node -e "require('fs').writeFileSync('node_modules/electron/path.txt','electron.exe')"
+
+# 3. 启动
+npx electron-vite dev
 ```
+
+说明：
+
+- `better-sqlite3` v13 使用 N-API 预编译（`node_modules/better-sqlite3/prebuilds/win32-x64.node`），**不需要** `electron-rebuild`
+- 不要直接跑 `pnpm dev`：它还会执行 `prepare:system-speech`、`rebuild:electron`、`download:binaries`，分别用于语音、原生模块重编译和 agent/CLI 工具（mise/bun/uv/rg），小程序运行都不需要；跳过还能避免这些步骤的下载失败
+- 启动日志里的 `BinaryManager ... version marker missing` 属于上述未下载的 CLI 工具，不影响小程序
+- 开发模式使用独立数据目录 `%APPDATA%\CherryStudioDev`（macOS 为 `~/Library/Application Support/CherryStudioDev`）；已有旧数据目录时会恢复上次打开的标签，删除该目录即可从「小程序」页干净启动
 
 ## 当前状态
 
