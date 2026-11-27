@@ -6,6 +6,7 @@ import {
   SidebarShortcutRegistry,
   SidebarShortcutRegistryProvider
 } from '@renderer/components/app/sidebarShortcuts'
+import { CodeStyleProvider } from '@renderer/components/CodeStyleProvider'
 import { CommandContextKeyProvider, CommandProvider } from '@renderer/components/command'
 import { ErrorBoundary } from '@renderer/components/ErrorBoundary'
 import { AppShell } from '@renderer/components/layout/AppShell'
@@ -86,11 +87,13 @@ function MainApp(): React.ReactElement {
     // during render (e.g. reading preferences) falls back instead of white-screening.
     <ErrorBoundary fallbackComponent={WindowFatalFallback}>
       <ThemeProvider>
-        <CommandContextKeyProvider>
-          <CommandProvider>
-            <MainWindowContent />
-          </CommandProvider>
-        </CommandContextKeyProvider>
+        <CodeStyleProvider>
+          <CommandContextKeyProvider>
+            <CommandProvider>
+              <MainWindowContent />
+            </CommandProvider>
+          </CommandContextKeyProvider>
+        </CodeStyleProvider>
       </ThemeProvider>
     </ErrorBoundary>
   )

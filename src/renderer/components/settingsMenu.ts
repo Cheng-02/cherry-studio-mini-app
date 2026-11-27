@@ -1,4 +1,4 @@
-import { Bell, Cloud, HardDrive, Info, Package, Palette, Settings2 } from 'lucide-react'
+import { Bell, Cloud, HardDrive, Info, Palette, Settings2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { createElement } from 'react'
 
@@ -34,7 +34,6 @@ export const BUILTIN_TOOLS_GROUP_KEY = 'settings.menuGroups.builtinTools'
  */
 export const settingsMenu: readonly SettingsMenuEntry[] = [
   { route: '/settings/provider', titleKey: 'settings.provider.title', icon: createElement(Cloud) },
-  { route: '/settings/model', titleKey: 'settings.model', icon: createElement(Package) },
   {
     route: '/settings/general',
     titleKey: 'settings.general.common.title',

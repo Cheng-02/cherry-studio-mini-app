@@ -17,7 +17,6 @@ import { Route as SettingsAboutRouteImport } from './routes/settings/about'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsDataRouteImport } from './routes/settings/data'
 import { Route as SettingsGeneralRouteImport } from './routes/settings/general'
-import { Route as SettingsModelRouteImport } from './routes/settings/model'
 import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications'
 import { Route as SettingsProviderRouteImport } from './routes/settings/provider'
 import { Route as SettingsSearchRouteImport } from './routes/settings/search'
@@ -64,11 +63,6 @@ const SettingsGeneralRoute = SettingsGeneralRouteImport.update({
   path: '/general',
   getParentRoute: () => SettingsRoute,
 } as any)
-const SettingsModelRoute = SettingsModelRouteImport.update({
-  id: '/model',
-  path: '/model',
-  getParentRoute: () => SettingsRoute,
-} as any)
 const SettingsNotificationsRoute = SettingsNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
@@ -103,7 +97,6 @@ export interface FileRoutesByFullPath {
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/general': typeof SettingsGeneralRoute
-  '/settings/model': typeof SettingsModelRoute
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/provider': typeof SettingsProviderRoute
   '/settings/search': typeof SettingsSearchRoute
@@ -118,7 +111,6 @@ export interface FileRoutesByTo {
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/general': typeof SettingsGeneralRoute
-  '/settings/model': typeof SettingsModelRoute
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/provider': typeof SettingsProviderRoute
   '/settings/search': typeof SettingsSearchRoute
@@ -135,7 +127,6 @@ export interface FileRoutesById {
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/general': typeof SettingsGeneralRoute
-  '/settings/model': typeof SettingsModelRoute
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/provider': typeof SettingsProviderRoute
   '/settings/search': typeof SettingsSearchRoute
@@ -153,7 +144,6 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/data'
     | '/settings/general'
-    | '/settings/model'
     | '/settings/notifications'
     | '/settings/provider'
     | '/settings/search'
@@ -168,7 +158,6 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/data'
     | '/settings/general'
-    | '/settings/model'
     | '/settings/notifications'
     | '/settings/provider'
     | '/settings/search'
@@ -184,7 +173,6 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/data'
     | '/settings/general'
-    | '/settings/model'
     | '/settings/notifications'
     | '/settings/provider'
     | '/settings/search'
@@ -256,13 +244,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsGeneralRouteImport
       parentRoute: typeof SettingsRoute
     }
-    '/settings/model': {
-      id: '/settings/model'
-      path: '/model'
-      fullPath: '/settings/model'
-      preLoaderRoute: typeof SettingsModelRouteImport
-      parentRoute: typeof SettingsRoute
-    }
     '/settings/notifications': {
       id: '/settings/notifications'
       path: '/notifications'
@@ -320,7 +301,6 @@ interface SettingsRouteChildren {
   SettingsAppearanceRoute: typeof SettingsAppearanceRoute
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsGeneralRoute: typeof SettingsGeneralRoute
-  SettingsModelRoute: typeof SettingsModelRoute
   SettingsNotificationsRoute: typeof SettingsNotificationsRoute
   SettingsProviderRoute: typeof SettingsProviderRoute
   SettingsSearchRoute: typeof SettingsSearchRoute
@@ -332,7 +312,6 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsAppearanceRoute: SettingsAppearanceRoute,
   SettingsDataRoute: SettingsDataRoute,
   SettingsGeneralRoute: SettingsGeneralRoute,
-  SettingsModelRoute: SettingsModelRoute,
   SettingsNotificationsRoute: SettingsNotificationsRoute,
   SettingsProviderRoute: SettingsProviderRoute,
   SettingsSearchRoute: SettingsSearchRoute,

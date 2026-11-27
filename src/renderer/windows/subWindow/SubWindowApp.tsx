@@ -1,3 +1,4 @@
+import { CodeStyleProvider } from '@renderer/components/CodeStyleProvider'
 import { CommandContextKeyProvider, CommandProvider } from '@renderer/components/command'
 import { ErrorBoundary } from '@renderer/components/ErrorBoundary'
 import { TabsProvider } from '@renderer/components/layout/TabsProvider'
@@ -27,16 +28,18 @@ function SubWindowApp(): React.ReactElement {
     // during render falls back instead of white-screening.
     <ErrorBoundary fallbackComponent={WindowFatalFallback}>
       <ThemeProvider>
-        <CommandContextKeyProvider>
-          <CommandProvider>
-            <TabsProvider initialDefaultTab={null} includePinnedTabs={false}>
-              <SubWindowAppShell />
-              <SubWindowRuntime />
-              <PopupHost />
-              <ToastHost />
-            </TabsProvider>
-          </CommandProvider>
-        </CommandContextKeyProvider>
+        <CodeStyleProvider>
+          <CommandContextKeyProvider>
+            <CommandProvider>
+              <TabsProvider initialDefaultTab={null} includePinnedTabs={false}>
+                <SubWindowAppShell />
+                <SubWindowRuntime />
+                <PopupHost />
+                <ToastHost />
+              </TabsProvider>
+            </CommandProvider>
+          </CommandContextKeyProvider>
+        </CodeStyleProvider>
       </ThemeProvider>
     </ErrorBoundary>
   )
