@@ -34,7 +34,10 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        # electron-builder's node-module walker chokes on pnpm's symlinked
+        # .pnpm layout on the runner; a hoisted tree avoids that class of
+        # dangling-link failures.
+        run: pnpm install --frozen-lockfile --config.node-linker=hoisted
 
       - name: Install Electron binary
         run: node node_modules/electron/install.js
