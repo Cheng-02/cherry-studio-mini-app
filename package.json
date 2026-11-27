@@ -2,8 +2,12 @@
   "name": "CherryStudio",
   "version": "2.2.3",
   "private": true,
-  "description": "A powerful AI assistant for producer.",
-  "homepage": "https://github.com/CherryHQ/cherry-studio",
+  "description": "Cherry Studio fork trimmed to the Mini Apps module only.",
+  "homepage": "https://github.com/Cheng-02/cherry-studio-mini-app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cheng-02/cherry-studio-mini-app.git"
+  },
   "author": "support@cherry-ai.com",
   "main": "./out/main/main.js",
   "scripts": {
