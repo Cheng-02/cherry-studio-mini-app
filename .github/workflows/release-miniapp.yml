@@ -1,0 +1,83 @@
+name: Release mini-app build (Windows)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to attach artifacts to (leave empty to only keep workflow artifacts)'
+        required: false
+        default: 'v2.2.3-miniapp.1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-miniapp-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  windows-x64:
+    name: Windows x64 (unsigned)
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Electron binary
+        run: node node_modules/electron/install.js
+
+      - name: Build main / preload / renderer
+        run: npx electron-vite build
+
+      - name: Build utility processes
+        run: pnpm run build:utility-process
+
+      - name: Package (unsigned)
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --win --x64 --publish never
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          shopt -s nullglob
+          cp dist/*.exe dist/*.yml dist/*.blockmap release-assets/ 2>/dev/null || true
+          ls -la release-assets
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cherry-studio-miniapp-win-x64
+          path: release-assets/*
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Attach to GitHub Release
+        if: ${{ inputs.tag != '' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          files=(release-assets/*)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No release assets found"
+            exit 1
+          fi
+          gh release upload "${{ inputs.tag }}" "${files[@]}" --clobber
