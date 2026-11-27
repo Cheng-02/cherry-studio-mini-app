@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
 import { useCache, useSharedCacheSelector } from '@renderer/data/hooks/useCache'
 import { useQuery } from '@renderer/data/hooks/useDataApi'
@@ -98,6 +98,16 @@ export function useMiniAppRuntimeBinding(): void {
   const { tabs, activeTabId, closeTabs } = useTabs()
   const { split, setSplit, splitMiniAppId, appIds, resources } = useMiniAppLayout()
   const [capacity] = usePreference('feature.mini_app.max_keep_alive')
+  // While the window is minimized/occluded Chromium keeps every guest process
+  // alive. Drop the keep-alive budget to zero so only the app currently on
+  // screen survives; background apps are recreated the next time their tab is
+  // activated (sync only creates guests for visible demands).
+  const [isWindowHidden, setIsWindowHidden] = useState(() => document.visibilityState === 'hidden')
+  useEffect(() => {
+    const onVisibilityChange = () => setIsWindowHidden(document.visibilityState === 'hidden')
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [])
   const { apps, byId } = useMiniAppDescriptors(appIds)
   const previousCatalog = useRef(apps)
   const previousTabs = useRef(tabs)
@@ -147,8 +157,11 @@ export function useMiniAppRuntimeBinding(): void {
           }
         ]
       })
-    webviewRuntimeService.sync(requests, capacity ?? DEFAULT_MAX_KEEP_ALIVE_MINI_APPS)
-  }, [tabs, activeTabId, split, setSplit, splitMiniAppId, appIds, apps, byId, capacity, closeTabs, resources])
+    webviewRuntimeService.sync(
+      requests,
+      isWindowHidden ? 0 : (capacity ?? DEFAULT_MAX_KEEP_ALIVE_MINI_APPS)
+    )
+  }, [tabs, activeTabId, split, setSplit, splitMiniAppId, appIds, apps, byId, capacity, closeTabs, resources, isWindowHidden])
 
   useIpcOn('mini_app.runtime.evicted', ({ appId }) => {
     if (split?.appId === appId) setSplit(null)
