@@ -43,6 +43,12 @@ const AppShellContent = () => {
   } = tabsApi
   const activeTab = useMemo(() => tabs.find((tab) => tab.id === activeTabId), [activeTabId, tabs])
   const isSettingsTabActive = isSettingsPath(activeTab?.url)
+  // A focused (settings) tab is rendered as a single back button; feeding the
+  // whole tab list here would paint one back button per open tab.
+  const tabBarTabs = useMemo(
+    () => (isSettingsTabActive && activeTab ? [activeTab] : tabs),
+    [activeTab, isSettingsTabActive, tabs]
+  )
   const isFullscreen = useNativeFullscreen()
   const hasLeadingWindowControls = useLeadingWindowControlsOverlay()
 
@@ -142,7 +148,7 @@ const AppShellContent = () => {
 
   const tabBar = (
     <AppShellTabBar
-      tabs={tabs}
+      tabs={tabBarTabs}
       shortcutHints={tabShortcutHints}
       activeTabId={activeTabId}
       isFullscreen={isFullscreen}
