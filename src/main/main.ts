@@ -22,7 +22,6 @@ import { serviceList } from '@main/core/application/serviceRegistry'
 import { prepareBackupRestoreSession, runBackupRestoreGate } from '@main/core/preboot/backupRestoreGate'
 import { configureChromiumFlags } from '@main/core/preboot/chromiumFlags'
 import { initCrashTelemetry } from '@main/core/preboot/crashTelemetry'
-import { runLegacyUpgradeGate } from '@main/core/preboot/legacyUpgradeGate'
 import { requireSingleInstance } from '@main/core/preboot/singleInstance'
 import { resolveUserDataLocation } from '@main/core/preboot/userDataLocation'
 import { MINI_APP_SCHEME_DECLARATION } from '@main/features/miniApp/runtime/protocol'
@@ -72,8 +71,8 @@ const startApp = async () => {
   const restoreResult = await runBackupRestoreGate(isolatedRestoreSession)
   if (restoreResult === 'handled') return
 
-  const upgradeResult = await runLegacyUpgradeGate()
-  if (upgradeResult === 'handled') return
+  // Mini-app-only fork: legacy Cherry Studio data migration is not supported,
+  // so the upgrade gate would block first launch against an existing profile.
 
   // The toolkit uses the executable path in development, which can exceed Windows' AUMID limit.
   // Establish the edition identity before bootstrap creates windows or notifications.

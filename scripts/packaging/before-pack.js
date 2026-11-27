@@ -165,6 +165,8 @@ const keepPackages = (platform, arch) => {
 // Anything kept for this arch but never installed is a native module the app would fail to
 // load at runtime, so stop here instead of shipping it. musl builds are excluded: pnpm
 // installs them only on a musl host, and releases are built on glibc.
+const SLIM = process.env.CHERRY_MINiapp_SLIM === '1'
+
 const assertPrebuiltPackages = (platform, arch) => {
   const missingPackages = keepPackages(platform, arch)
     .filter((p) => !p.includes('musl'))
@@ -219,18 +221,22 @@ exports.default = async function (context) {
   const platformName = context.packager.platform.name
   const platform = platformToArch[platformName]
 
-  prepareSystemSpeechHelper(context)
+  if (!SLIM) prepareSystemSpeechHelper(context)
 
   await prepareNativeModulesForElectron(context)
   buildExternalApp({ platform, arch, packaging: true })
   assertPrebuiltPackages(platform, arch)
 
-  console.log(`Downloading bundled binaries for ${platform}-${arch}...`)
-  execSync(`node "${path.join(__dirname, '../download-binaries.js')}" ${platform} ${arch} --packaging`, {
-    stdio: 'inherit'
-  })
-  // Fail the build rather than ship a half-empty resources/binaries/<platform>.
-  require('../download-binaries').verifyBundledBinaries(platform, arch)
+  if (!SLIM) {
+    console.log(`Downloading bundled binaries for ${platform}-${arch}...`)
+    execSync(`node "${path.join(__dirname, '../download-binaries.js')}" ${platform} ${arch} --packaging`, {
+      stdio: 'inherit'
+    })
+    // Fail the build rather than ship a half-empty resources/binaries/<platform>.
+    require('../download-binaries').verifyBundledBinaries(platform, arch)
+  } else {
+    console.log('[before-pack] slim build: skipping bundled CLI binaries and system-speech helper')
+  }
 
   const excludePackages = async (packagesToExclude) => {
     // 从项目根目录的 electron-builder.yml 读取 files 配置，避免多次覆盖配置导致出错
